@@ -60,6 +60,17 @@ different `LXC_NETWORK` in `waydroid-net.sh`:
 sudo iptables -t nat -A POSTROUTING -s 192.168.240.0/24 ! -d 192.168.240.0/24 -j MASQUERADE
 ```
 
+If Android gets no IPv4 address at all, check the host `INPUT` chain too.
+When `iptables-nft` prints `iptables-legacy tables present`, Waydroid's DHCP
+and DNS rules can be in the legacy tables while UFW or another firewall drops
+the same packets in nftables. An `ACCEPT` in one backend does not override a
+`DROP` in the other. With UFW, allow DHCP and DNS on the Waydroid bridge:
+
+```bash
+sudo ufw allow in on waydroid0 to any port 67 proto udp
+sudo ufw allow in on waydroid0 to any port 53
+```
+
 These rules are lost on reboot. To apply them at each boot, after Docker and
 Waydroid, save this script as `/usr/local/sbin/waydroid-nat.sh` and make it
 executable (`sudo chmod +x /usr/local/sbin/waydroid-nat.sh`). It adds each
